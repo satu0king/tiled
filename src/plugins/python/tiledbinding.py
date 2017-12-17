@@ -59,9 +59,10 @@ cls_tile.add_method('width', 'int', [])
 cls_tile.add_method('height', 'int', [])
 #cls_tile.add_method('size', 'QSize', [])
 
-cls_sharedtileset = tiled.add_class('SharedTileset')
-
 cls_tileset = tiled.add_class('Tileset', cls_object)
+cls_sharedtileset = tiled.add_class('SharedTileset')
+cls_sharedtileset.add_method('data', retval('Tiled::Tileset*',reference_existing_object=True), [])
+
 cls_tileset.add_method('create', 'Tiled::SharedTileset',
                        [('QString','name'), ('int','tileWidth'), ('int','tileHeight'), ('int','tileSpacing'), ('int','margin')],
                        is_static=True)
@@ -122,7 +123,7 @@ cls_map.add_method('removeTilesetAt', None, [('int','pos')])
 cls_map.add_method('replaceTileset', None,
     [param('SharedTileset','oldTileset'),
      param('SharedTileset','newTileset')])
-cls_map.add_method('tilesetAt', 
+cls_map.add_method('tilesetAt',
     retval('Tiled::SharedTileset'),
     [('int','idx')])
 cls_map.add_method('tilesetCount', 'int', [])
@@ -294,7 +295,7 @@ cls_pp = mod.add_class('PythonScript',
 """
 cls_logi = tiled.add_class('LoggingInterface', destructor_visibility='private')
 cls_logi.add_enum('OutputType', ('INFO','ERROR'))
-cls_logi.add_method('log', 'void', [('OutputType','type'),('const QString','msg')], 
+cls_logi.add_method('log', 'void', [('OutputType','type'),('const QString','msg')],
     is_virtual=True)
 
 
@@ -315,7 +316,7 @@ PyObject* _wrap_convert_c2py__Tiled__LoggingInterface(Tiled::LoggingInterface *c
 {
         PyObject *py_retval;
         PyTiledLoggingInterface *py_LoggingInterface;
-        
+
         py_LoggingInterface = PyObject_New(PyTiledLoggingInterface, &PyTiledLoggingInterface_Type);
         py_LoggingInterface->flags = PYBINDGEN_WRAPPER_FLAG_NONE;
         py_LoggingInterface->obj = cvalue;

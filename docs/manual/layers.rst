@@ -56,6 +56,7 @@ properties. There are many kinds of objects:
 
 -  **Rectangle** - for marking custom rectangular areas
 -  **Ellipse** - for marking custom ellipse or circular areas
+-  **Point** - for marking exact locations
 -  **Polygon** - for when a rectangle or ellipse doesn't cut it (often a
    collision area)
 -  **Polyline** - can be a path to follow or a wall to collide with
@@ -80,7 +81,7 @@ If you're using a different coordinate space for objects in your
 isometric game, you'll need to convert these coordinates accordingly.
 
 The object width and height is also mostly stored in pixels. For
-isometric maps, all shape objects (rectangle, ellipse, polygon and
+isometric maps, all shape objects (rectangle, point, ellipse, polygon and
 polyline) are projected into the same coordinate space described above.
 This is based on the assumption that these objects are generally used to
 mark areas on the map.
@@ -90,13 +91,13 @@ Image Layers
 
 Image layers provide a way to quickly include a single image as
 foreground or background of your map. They are currently not so useful,
-because if you instead add the image as a Tileset and place it as a Tile
-Object, you gain the ability to freely scale and rotate the image.
+because if you instead add the image as a Tileset and place it as a :ref:`Tile Object <insert-tile-tool>`,
+you gain the ability to freely scale and rotate the image.
 
 The only advantage of using an image layer is that it avoids selecting /
-dragging the image while using the Select Objects tool, which is mainly
-due to the lack of layer locking
-(`#734 <https://github.com/bjorn/tiled/issues/734>`__).
+dragging the image while using the Select Objects tool. However, since Tiled
+1.1 this can also be achieved by locking the object layer containing the tile
+object you'd like to avoid interacting with.
 
 .. raw:: html
 
