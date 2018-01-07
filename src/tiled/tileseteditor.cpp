@@ -173,21 +173,9 @@ TilesetEditor::TilesetEditor(QObject *parent)
     , mCurrentTilesetDocument(nullptr)
     , mCurrentTile(nullptr)
 {
-    mTerrainDock->setVisible(false);
-    mTileCollisionDock->setVisible(false);
-    mWangDock->setVisible(false);
-
     mMainWindow->setDockOptions(mMainWindow->dockOptions() | QMainWindow::GroupedDragging);
     mMainWindow->setDockNestingEnabled(true);
     mMainWindow->setCentralWidget(mWidgetStack);
-    mMainWindow->addToolBar(mMainToolBar);
-    mMainWindow->addDockWidget(Qt::LeftDockWidgetArea, mPropertiesDock);
-    mMainWindow->addDockWidget(Qt::LeftDockWidgetArea, mUndoDock);
-    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mTerrainDock);
-    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mTileCollisionDock);
-    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mWangDock);
-
-    mUndoDock->setVisible(false);
 
     QAction *editTerrain = mTerrainDock->toggleViewAction();
     QAction *editCollision = mTileCollisionDock->toggleViewAction();
@@ -219,6 +207,8 @@ TilesetEditor::TilesetEditor(QObject *parent)
     mTilesetToolBar->addAction(mShowAnimationEditor);
 
     mMainWindow->statusBar()->addPermanentWidget(mZoomComboBox);
+
+    resetLayout();
 
     connect(mMainWindow, &TilesetEditorWindow::urlsDropped, this, &TilesetEditor::addTiles);
 
@@ -252,12 +242,11 @@ TilesetEditor::TilesetEditor(QObject *parent)
             mTileCollisionDock, &TileCollisionDock::setTile);
 
     connect(mTileCollisionDock, &TileCollisionDock::dummyMapDocumentChanged,
-            this, [this](MapDocument *mapDocument) {
-        if (mTileCollisionDock->isVisible())
-            mPropertiesDock->setDocument(mapDocument);
+            this, [this]() {
+        mPropertiesDock->setDocument(mCurrentTilesetDocument);
     });
-    connect(mTileCollisionDock, &TileCollisionDock::canCopyChanged,
-            this, &Editor::enabledStandardActionsChanged);
+    connect(mTileCollisionDock, &TileCollisionDock::hasSelectedObjectsChanged,
+            this, &TilesetEditor::hasSelectedCollisionObjectsChanged);
     connect(mTileCollisionDock, &TileCollisionDock::visibilityChanged,
             this, &Editor::enabledStandardActionsChanged);
 
@@ -428,7 +417,7 @@ Editor::StandardActions TilesetEditor::enabledStandardActions() const
     StandardActions standardActions;
 
     if (mCurrentTile && mTileCollisionDock->isVisible()) {
-        if (mTileCollisionDock->canCopy())
+        if (mTileCollisionDock->hasSelectedObjects())
             standardActions |= CutAction | CopyAction | DeleteAction;
 
         if (ClipboardManager::instance()->hasMap())
@@ -457,6 +446,32 @@ void TilesetEditor::performStandardAction(StandardAction action)
         mTileCollisionDock->delete_();
         break;
     }
+}
+
+void TilesetEditor::resetLayout()
+{
+    // Remove dock widgets (this also hides them)
+    const QList<QDockWidget*> dockWidgets = this->dockWidgets();
+    for (auto dockWidget : dockWidgets)
+        mMainWindow->removeDockWidget(dockWidget);
+
+    // Show Properties dock by default
+    mPropertiesDock->setVisible(true);
+
+    // Make sure all toolbars are visible
+    const QList<QToolBar*> toolBars = this->toolBars();
+    for (auto toolBar : toolBars)
+        toolBar->setVisible(true);
+
+    mMainWindow->addToolBar(mMainToolBar);
+    mMainWindow->addToolBar(mTilesetToolBar);
+
+    mMainWindow->addDockWidget(Qt::LeftDockWidgetArea, mPropertiesDock);
+    mMainWindow->addDockWidget(Qt::LeftDockWidgetArea, mUndoDock);
+
+    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mTerrainDock);
+    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mTileCollisionDock);
+    mMainWindow->addDockWidget(Qt::RightDockWidgetArea, mWangDock);
 }
 
 TilesetView *TilesetEditor::currentTilesetView() const
@@ -796,12 +811,23 @@ void TilesetEditor::currentTerrainChanged(const Terrain *terrain)
 void TilesetEditor::setEditCollision(bool editCollision)
 {
     if (editCollision) {
-        mPropertiesDock->setDocument(mTileCollisionDock->dummyMapDocument());
+        if (mTileCollisionDock->hasSelectedObjects())
+            mPropertiesDock->setDocument(mTileCollisionDock->dummyMapDocument());
         mTerrainDock->setVisible(false);
         mWangDock->setVisible(false);
     } else {
         mPropertiesDock->setDocument(mCurrentTilesetDocument);
     }
+}
+
+void TilesetEditor::hasSelectedCollisionObjectsChanged()
+{
+    if (mTileCollisionDock->hasSelectedObjects())
+        mPropertiesDock->setDocument(mTileCollisionDock->dummyMapDocument());
+    else
+        mPropertiesDock->setDocument(mCurrentTilesetDocument);
+
+    emit enabledStandardActionsChanged();
 }
 
 void TilesetEditor::setEditWang(bool editWang)

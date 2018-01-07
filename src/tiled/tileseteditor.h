@@ -77,6 +77,8 @@ public:
     StandardActions enabledStandardActions() const override;
     void performStandardAction(StandardAction action) override;
 
+    void resetLayout() override;
+
     TilesetView *currentTilesetView() const;
     Tileset *currentTileset() const;
     Zoomable *zoomable() const override;
@@ -110,6 +112,7 @@ private slots:
     void currentTerrainChanged(const Terrain *terrain);
 
     void setEditCollision(bool editCollision);
+    void hasSelectedCollisionObjectsChanged();
 
     void setEditWang(bool editWang);
 
